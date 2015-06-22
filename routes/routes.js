@@ -1,5 +1,6 @@
 var AccountModel = require("../models/accountmodel");
 var SessionModel = require("../models/sessionmodel");
+var StateModel = require("../models/statemodel");
 
 var appRouter = function(app) {
 
@@ -60,6 +61,10 @@ var appRouter = function(app) {
         });
     });
 
+    /*
+     * Validate the sign in attempt and return a session if successful for accessing
+     * secure API endpoints
+     */
     app.get("/api/auth", function(req, res, next) {
         if(!req.query.username) {
             return next(JSON.stringify({"status": "error", "message": "A username must be provided"}));
@@ -81,6 +86,48 @@ var appRouter = function(app) {
                 res.setHeader("Authorization", "Bearer " + result);
                 res.send(user);
             });
+        });
+    });
+
+    /*
+     * Get the state for a particular save name
+     */
+    app.get("/api/state/:name", SessionModel.authenticate, function(req, res, next) {
+        if(!req.uid) {
+            return next(JSON.stringify({"status": "error", "message": "A uid must be provided"}));
+        }
+        StateModel.getByUserIdAndName(req.uid, req.params.name, function(error, result) {
+            if(error) {
+                return res.send(error);
+            }
+            res.send(result);
+        });
+    });
+
+    /*
+     * Create or update a save state for a particular name
+     */
+    app.put("/api/state/:name", SessionModel.authenticate, function(req, res, next) {
+        StateModel.save(req.uid, req.params.name, parseInt(req.query.preVer, 10), req.body, function(error, result) {
+            if(error) {
+                return res.send(error);
+            }
+            res.send(result);
+        });
+    });
+
+    /*
+     * Get all game states for the currently signed in user
+     */
+    app.get("/api/states", SessionModel.authenticate, function(req, res, next) {
+        if(!req.uid) {
+            return next(JSON.stringify({"status": "error", "message": "A uid must be provided"}));
+        }
+        StateModel.getByUserId(req.uid, function(error, result) {
+            if(error) {
+                return res.send(error);
+            }
+            res.send(result);
         });
     });
 
