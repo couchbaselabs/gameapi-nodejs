@@ -76,10 +76,10 @@ var appRouter = function(app) {
             if(error) {
                 return res.status(400).send(error);
             }
-            if(!AccountModel.validatePassword(req.query.password, user.value.password)) {
+            if(!AccountModel.validatePassword(req.query.password, user[0].password)) {
                 return res.send({"status": "error", "message": "The password entered is invalid"});
             }
-            SessionModel.create(user.value.uid, function(error, result) {
+            SessionModel.create(user[0].uid, function(error, result) {
                 if(error) {
                     return res.status(400).send(error);
                 }

@@ -1,5 +1,6 @@
 var uuid = require("uuid");
 var couchbase = require("couchbase");
+var N1qlQuery = require('couchbase').N1qlQuery;
 var db = require("../app").bucket;
 
 function StateModel() { };
