@@ -1,6 +1,7 @@
 var uuid = require("uuid");
 var forge = require("node-forge");
 var db = require("../app").bucket;
+var N1qlQuery = require('couchbase').N1qlQuery;
 
 function AccountModel() { };
 
@@ -38,7 +39,16 @@ AccountModel.create = function(params, callback) {
  * Get the reference to an already existing user account
  */
 AccountModel.getByUsername = function(params, callback) {
-    db.get("username::" + params.username, function(error, result) {
+    // select u0.*, u1.name from `gaming-sample` as u0 join `gaming-sample` as u1 on keys ("user::" || u0.uid) where meta(u0).id like 'username::%';
+    // select users.* from `gaming-sample` as usernames join `gaming-sample` as users on keys ("user::" || usernames.uid) where meta(usernames).id like 'username::%';
+    var query = N1qlQuery.fromString("select users.* from `gaming-sample` as usernames join `gaming-sample` as users on keys (\"user::\" || usernames.uid) where meta(usernames).id = $1");
+    db.query(query, ["username::" + params.username], function(error, result) {
+        if(error) {
+            return callback(error, null);
+        }
+        callback(null, result);
+    });
+    /*db.get("username::" + params.username, function(error, result) {
         if(error) {
             callback(error, null);
             return;
@@ -50,7 +60,7 @@ AccountModel.getByUsername = function(params, callback) {
             }
             callback(null, result);
         });
-    });
+    });*/
 };
 
 /*
